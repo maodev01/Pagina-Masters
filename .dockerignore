@@ -1,0 +1,14 @@
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+.env
+.env.example
+.git
+.gitignore
+Dockerfile
+render.yaml
+README.md
+tests
+phpunit.xml
