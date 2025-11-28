@@ -22,9 +22,9 @@ RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
 RUN a2enmod rewrite
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /app
 
-COPY . /var/www/html
+COPY . /app
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -34,15 +34,13 @@ RUN npm install && npm run build
 
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Configure Apache DocumentRoot
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Copy custom virtualhost
+COPY docker/laravel.conf /etc/apache2/sites-available/laravel.conf
 
-# Force Apache to listen on Railway's port
-RUN sed -i "s/80/\${PORT}/g" /etc/apache2/ports.conf
-RUN sed -i "s/:80/:${PORT}/g" /etc/apache2/sites-available/000-default.conf
+RUN a2dissite 000-default.conf
+RUN a2ensite laravel.conf
 
-EXPOSE ${PORT}
+# Expose Railway port
+EXPOSE 8080
 
 CMD ["apache2-foreground"]
