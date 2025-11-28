@@ -37,8 +37,7 @@
                     <a href="{{ route('home') }}" class="flex items-center gap-3">
                         <img src="{{ asset('images/logo-1.png') }}" alt="Los Masters Logo"
                             style="width: 120px; height: 120px; object-fit: contain;">
-                        <span class="text-xl font-bold text-amber-600 tracking-wider hidden sm:block">Los Masters de
-                            Colombia</span>
+                        <!--<span class="text-xl font-bold text-amber-600 tracking-wider hidden sm:block"></span>-->
                     </a>
                 </div>
                 <div class="hidden md:flex items-center space-x-8">
