@@ -27,25 +27,34 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
 WORKDIR /var/www/html
 
-# Copia primero los archivos de dependencias (para aprovechar la caché de Docker)
+# 1. Copia archivos de dependencias
 COPY composer.json composer.lock ./
 COPY package.json package-lock.json ./
 
-# Install Composer
+# 2. Instala Composer y dependencias de PHP
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# CORRECCIÓN: Agregado --no-scripts para que no falle al no encontrar la carpeta app/
+RUN composer install --no-interaction --optimize-autoloader --no-dev --no-scripts
 
-# Install Node dependencies and build
-RUN npm install && npm run build
+# 3. Instala dependencias de Node
+RUN npm install
 
-# Copia el resto del código
+# 4. Copia el resto del código fuente
+# Esto es vital hacerlo ANTES de npm run build y composer dump-autoload
 COPY . .
+
+# 5. Compila los assets (Vite/Mix)
+# CORRECCIÓN: Movido aquí porque necesita los archivos de 'resources/' que copiamos arriba
+RUN npm run build
+
+# 6. Regenera el autoloader de Composer
+# CORRECCIÓN: Necesario para vincular las clases de Laravel que copiamos en el paso 4
+RUN composer dump-autoload --optimize
 
 # Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# --- AQUI ESTA EL CAMBIO IMPORTANTE ---
-# Copiar el script de entrypoint y darle permisos de ejecución
+# Configuración del Entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
