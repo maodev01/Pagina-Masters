@@ -10,8 +10,6 @@ services:
     env: docker
     plan: free
     region: oregon
-    buildCommand: docker build -t laravel-app .
-    startCommand: docker-php-entrypoint apache2-foreground
     envVars:
       - key: APP_KEY
         generateValue: true
