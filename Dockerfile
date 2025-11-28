@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     npm
 
-# Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -31,18 +30,23 @@ COPY . /var/www/html
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Install JS dependencies and build assets
+# Build front-end assets
 RUN npm install && npm run build
 
-# Set permissions
+# Permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configure Apache DocumentRoot to point to public folder
+# Apache Document Root → public/
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-EXPOSE 80
+# --- FIX PARA RAILWAY ---
+
+# Cambiar puerto por el que Railway asigna dinámicamente
+RUN sed -i "s/Listen 80/Listen \${PORT}/" /etc/apache2/ports.conf
+RUN sed -i "s/:80/:${PORT}/g" /etc/apache2/sites-available/000-default.conf
+
+EXPOSE ${PORT}
